@@ -1,11 +1,17 @@
 import PixabayAPI from './pixabay-api';
+import Notiflix from 'notiflix';
+
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const pixabayAPIinstance = new PixabayAPI();
+let lightbox = null;
 
 const searchForm = document.querySelector('.search-form');
 const galleryList = document.querySelector('.gallery');
 const loadMoreButton = document.querySelector('.load-more');
 const loaderEl = document.querySelector('.loader');
+
 const searchInputForm = searchForm.firstElementChild;
 
 searchForm.addEventListener('submit', onSearch);
@@ -20,7 +26,10 @@ function onSearch(e) {
 
   pixabayAPIinstance.resetPage();
   clearGallery();
-  fetchPhotos();
+
+  fetchPhotos().then(data => {
+    displayTotalHits(data.totalHits);
+  });
 }
 
 function onClickLoadMore() {
@@ -30,35 +39,60 @@ function onClickLoadMore() {
 }
 
 function fetchPhotos() {
-  pixabayAPIinstance.fetchPhotos().then(data => {
+  return pixabayAPIinstance.fetchPhotos().then(data => {
     loaderEl.classList.add('is-hidden');
-
     handleFetchPhotoRespone(data);
+
+    return data;
   });
 }
 
 function handleFetchPhotoRespone(data) {
+  if (data.hits.length === 0) {
+    displayNoResults();
+    return;
+  }
+
   if (data.totalHits <= pixabayAPIinstance.page * pixabayAPIinstance.perPage) {
     displayEndOfSearchResults();
-    return;
-  } else if (data.hits.length === 0) {
-    galleryList.innerHTML = 'No results';
     return;
   }
 
   renderPhoto(data.hits);
   loadMoreButton.classList.remove('is-hidden');
+
+  if (!lightbox) {
+    lightbox = new SimpleLightbox('.gallery a', {
+      onComplete: () => {
+        lightbox.refresh();
+      },
+    });
+  } else {
+    lightbox.refresh();
+  }
+}
+
+function displayTotalHits(totalHits) {
+  Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+}
+
+function displayNoResults() {
+  return Notiflix.Notify.failure(
+    '"Sorry, there are no images matching your search query. Please try again."'
+  );
 }
 
 function displayEndOfSearchResults() {
   loadMoreButton.classList.add('is-hidden');
-  galleryList.innerHTML =
-    "We're sorry, but you've reached the end of search results.";
+  Notiflix.Notify.warning(
+    "We're sorry, but you've reached the end of search results."
+  );
 }
 
 function renderPhoto(photos) {
   photos.forEach(photo => {
-    galleryList.insertAdjacentHTML('beforeend', createMarkup(photo));
+    const markup = createMarkup(photo);
+    galleryList.insertAdjacentHTML('beforeend', markup);
   });
 }
 
@@ -68,12 +102,14 @@ function clearGallery() {
 
 function createMarkup(data) {
   return `<div class="photo-card">
-      <img
-        src="${data.webformatURL}"
-        alt="${data.tags}"
-        loading="lazy"
-        width="350"
-      />
+      <a href="${data.largeImageURL}">
+        <img
+          src="${data.webformatURL}"
+          alt="${data.tags}"
+          loading="lazy"
+          width="350"
+        />
+      </a>
       <div class="info">
         <p class="info-item">
           <b>Likes</b>
@@ -92,6 +128,5 @@ function createMarkup(data) {
           <span>${data.downloads}</span>
         </p>
       </div>
-    </div>
-  `;
+    </div>`;
 }
