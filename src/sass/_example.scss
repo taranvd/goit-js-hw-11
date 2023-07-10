@@ -1,12 +1,44 @@
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: rgba(0, 0, 0, 0.079);
-  scroll-behavior: smooth;
+}
+
+a {
+  text-decoration: none;
+}
+
+#my-scrollbar {
+  height: 100vh;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  h1 {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: rgb(153, 215, 241);
+    color: rgb(226, 104, 67);
+    text-transform: uppercase;
+  }
+}
+
+.logo-img {
+  height: 100px;
+  width: 100px;
+  // object-fit: contain;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px 20px;
   scroll-behavior: smooth;
 }
 
@@ -14,6 +46,33 @@ body {
   margin: 20px 0 40px 0;
   display: flex;
   justify-content: center;
+}
+
+.search-form {
+  display: flex;
+  gap: 20px;
+  padding: 10px 10px;
+
+  input,
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+  }
+
+  button {
+    font-weight: 700;
+    color: rgb(220, 107, 38);
+    background-color: rgb(153, 215, 241);
+    cursor: pointer;
+
+    transition: all 0.3s;
+
+    &:hover {
+      color: rgba(227, 100, 75, 0.63);
+      background-color: rgba(153, 215, 241, 0.667);
+    }
+  }
 }
 
 .gallery {
@@ -34,7 +93,7 @@ body {
   }
 }
 
-a::after {
+.gallery a::after {
   content: '';
   position: absolute;
   top: 0;
@@ -45,7 +104,7 @@ a::after {
   transition: background-color 0.3s ease;
 }
 
-a:hover::after {
+.gallery a:hover::after {
   background-color: rgba(0, 0, 0, 0.453);
 }
 
@@ -132,6 +191,20 @@ img {
   position: fixed;
   bottom: 25px;
   right: 25px;
+
+  border-radius: 50px;
+  padding: 20px 10px;
+  background-color: rgb(94, 94, 94);
+
+  transition: all 0.3s;
+
+  .arrow {
+    color: white;
+  }
+
+  &:hover {
+    background-color: rgba(94, 94, 94, 0.569);
+  }
 }
 
 @keyframes rotation {

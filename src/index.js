@@ -1,50 +1,54 @@
 import PixabayAPI from './pixabay-api';
 import Notiflix from 'notiflix';
-
+import throttle from 'lodash.throttle';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+
+const searchForm = document.querySelector('.search-form');
+const galleryList = document.querySelector('.gallery');
+const upButton = document.querySelector('.up');
+const loaderEl = document.querySelector('.loader');
+const searchInputForm = searchForm.firstElementChild;
 
 const pixabayAPIinstance = new PixabayAPI();
 let lightbox = null;
 
-const searchForm = document.querySelector('.search-form');
-const galleryList = document.querySelector('.gallery');
-const loadMoreButton = document.querySelector('.load-more');
-const loaderEl = document.querySelector('.loader');
+searchForm.addEventListener('submit', throttle(onSearch, 1000));
+window.addEventListener('scroll', throttle(onScrollPage, 1000));
 
-const searchInputForm = searchForm.firstElementChild;
-
-searchForm.addEventListener('submit', onSearch);
-loadMoreButton.addEventListener('click', onClickLoadMore);
-
-function onSearch(e) {
+async function onSearch(e) {
   e.preventDefault();
   pixabayAPIinstance.query = searchInputForm.value;
 
-  loadMoreButton.classList.add('is-hidden');
+  if (pixabayAPIinstance.query === '') {
+    displayNoResults();
+
+    return;
+  }
+
   loaderEl.classList.remove('is-hidden');
 
   pixabayAPIinstance.resetPage();
   clearGallery();
 
-  fetchPhotos().then(data => {
-    displayTotalHits(data.totalHits);
-  });
+  const data = await fetchPhotos();
+  displayTotalHits(data.totalHits);
+
+  upButton.classList.remove('is-hidden');
 }
 
-function onClickLoadMore() {
+function handleLoadMore() {
   loaderEl.classList.remove('is-hidden');
   pixabayAPIinstance.page += 1;
   fetchPhotos();
 }
 
-function fetchPhotos() {
-  return pixabayAPIinstance.fetchPhotos().then(data => {
-    loaderEl.classList.add('is-hidden');
-    handleFetchPhotoRespone(data);
+async function fetchPhotos() {
+  const data = await pixabayAPIinstance.fetchPhotos();
+  loaderEl.classList.add('is-hidden');
+  handleFetchPhotoRespone(data);
 
-    return data;
-  });
+  return data;
 }
 
 function handleFetchPhotoRespone(data) {
@@ -59,7 +63,7 @@ function handleFetchPhotoRespone(data) {
   }
 
   renderPhoto(data.hits);
-  loadMoreButton.classList.remove('is-hidden');
+  // loadMoreButton.classList.remove('is-hidden');
 
   if (!lightbox) {
     lightbox = new SimpleLightbox('.gallery a', {
@@ -83,7 +87,7 @@ function displayNoResults() {
 }
 
 function displayEndOfSearchResults() {
-  loadMoreButton.classList.add('is-hidden');
+  // loadMoreButton.classList.add('is-hidden');
   Notiflix.Notify.warning(
     "We're sorry, but you've reached the end of search results."
   );
@@ -129,4 +133,13 @@ function createMarkup(data) {
         </p>
       </div>
     </div>`;
+}
+
+function onScrollPage(e) {
+  const { bottom } = document.documentElement.getBoundingClientRect();
+  const clientHeight = document.documentElement.clientHeight;
+
+  if (bottom <= clientHeight + 400) {
+    handleLoadMore();
+  }
 }
