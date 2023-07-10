@@ -1,3 +1,4 @@
+import axios from 'axios';
 import PixabayAPI from './pixabay-api';
 import Notiflix from 'notiflix';
 import throttle from 'lodash.throttle';
