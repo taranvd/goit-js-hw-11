@@ -32,9 +32,11 @@ async function onSearch(e) {
   clearGallery();
 
   const data = await fetchPhotos();
-  displayTotalHits(data.totalHits);
 
-  upButton.classList.remove('is-hidden');
+  if (data.totalHits) {
+    displayTotalHits(data.totalHits);
+    return;
+  }
 }
 
 function handleLoadMore() {
@@ -62,8 +64,8 @@ function handleFetchPhotoRespone(data) {
     return;
   }
 
+  upButton.classList.remove('is-hidden');
   renderPhoto(data.hits);
-  // loadMoreButton.classList.remove('is-hidden');
 
   if (!lightbox) {
     lightbox = new SimpleLightbox('.gallery a', {
@@ -136,7 +138,7 @@ function createMarkup(data) {
 }
 
 function onScrollPage(e) {
-  const { bottom } = document.documentElement.getBoundingClientRect();
+  const { bottom, top } = document.documentElement.getBoundingClientRect();
   const clientHeight = document.documentElement.clientHeight;
 
   if (bottom <= clientHeight + 400) {
