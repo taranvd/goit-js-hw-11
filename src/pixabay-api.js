@@ -10,17 +10,22 @@ export default class PixabayAPI {
 
   async fetchPhotos() {
     try {
-      const response = await axios.get(
-        `${this.#BASE_URL}key=${this.#API_KEY}&q=${
-          this.query
-        }&image_type=photo&orientation=horizontal&safesearch=true&page=${
-          this.page
-        }&per_page=${this.perPage}`
-      );
+      const config = {
+        params: {
+          key: this.#API_KEY,
+          q: this.query,
+          image_type: 'photo',
+          orientation: 'horizontal',
+          safesearch: true,
+          page: this.page,
+          per_page: this.perPage,
+        },
+      };
+
+      const response = await axios.get(this.#BASE_URL, config);
       return response.data;
     } catch (error) {
       console.error('Error fetching photos:', error);
-      throw error;
     }
   }
 

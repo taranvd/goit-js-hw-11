@@ -15,15 +15,15 @@ const pixabayAPIinstance = new PixabayAPI();
 let lightbox = null;
 
 searchForm.addEventListener('submit', throttle(onSearch, 1000));
-window.addEventListener('scroll', throttle(onScrollPage, 1000));
+window.addEventListener('scroll', throttle(onScrollPage, 2000));
 
 async function onSearch(e) {
   e.preventDefault();
-  pixabayAPIinstance.query = searchInputForm.value;
+
+  pixabayAPIinstance.query = searchInputForm.value.trim();
 
   if (pixabayAPIinstance.query === '') {
     displayNoResults();
-
     return;
   }
 
@@ -43,6 +43,7 @@ async function onSearch(e) {
 function handleLoadMore() {
   loaderEl.classList.remove('is-hidden');
   pixabayAPIinstance.page += 1;
+
   fetchPhotos();
 }
 
@@ -51,16 +52,20 @@ async function fetchPhotos() {
   loaderEl.classList.add('is-hidden');
   handleFetchPhotoRespone(data);
 
+  console.log(data);
   return data;
 }
 
 function handleFetchPhotoRespone(data) {
-  if (data.hits.length === 0) {
+  if (data.hits.length === 0 && pixabayAPIinstance.page > 2) {
     displayNoResults();
     return;
   }
 
-  if (data.totalHits <= pixabayAPIinstance.page * pixabayAPIinstance.perPage) {
+  if (
+    data.totalHits <= pixabayAPIinstance.page * pixabayAPIinstance.perPage &&
+    pixabayAPIinstance.page > 1
+  ) {
     displayEndOfSearchResults();
     return;
   }
@@ -139,10 +144,11 @@ function createMarkup(data) {
 }
 
 function onScrollPage(e) {
-  const { bottom, top } = document.documentElement.getBoundingClientRect();
+  const { bottom } = document.documentElement.getBoundingClientRect();
   const clientHeight = document.documentElement.clientHeight;
 
-  if (bottom <= clientHeight + 400) {
+  if (bottom <= clientHeight + 150) {
     handleLoadMore();
+    return;
   }
 }
