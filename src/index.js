@@ -57,7 +57,7 @@ async function fetchPhotos() {
 }
 
 function handleFetchPhotoRespone(data) {
-  if (data.hits.length === 0 && pixabayAPIinstance.page > 2) {
+  if (data.hits.length === 0) {
     displayNoResults();
     return;
   }
