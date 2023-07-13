@@ -1,8 +1,13 @@
 import axios from 'axios';
-import PixabayAPI from './pixabay-api';
-import Notiflix from 'notiflix';
-import throttle from 'lodash.throttle';
+import { pixabayAPIinstance } from './pixabay-api';
+import debounce from 'lodash.debounce';
 import SimpleLightbox from 'simplelightbox';
+import { createMarkup } from './create-markup';
+import {
+  displayEndOfSearchResults,
+  displayNoResults,
+  displayTotalHits,
+} from './notify-alert';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const searchForm = document.querySelector('.search-form');
@@ -11,11 +16,10 @@ const upButton = document.querySelector('.up');
 const loaderEl = document.querySelector('.loader');
 const searchInputForm = searchForm.firstElementChild;
 
-const pixabayAPIinstance = new PixabayAPI();
 let lightbox = null;
 
-searchForm.addEventListener('submit', throttle(onSearch, 1000));
-window.addEventListener('scroll', throttle(onScrollPage, 2000));
+searchForm.addEventListener('submit', onSearch);
+document.addEventListener('scroll', debounce(onScrollPage, 1000));
 
 async function onSearch(e) {
   e.preventDefault();
@@ -52,7 +56,6 @@ async function fetchPhotos() {
   loaderEl.classList.add('is-hidden');
   handleFetchPhotoRespone(data);
 
-  console.log(data);
   return data;
 }
 
@@ -84,70 +87,21 @@ function handleFetchPhotoRespone(data) {
   }
 }
 
-function displayTotalHits(totalHits) {
-  Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
-}
-
-function displayNoResults() {
-  return Notiflix.Notify.failure(
-    '"Sorry, there are no images matching your search query. Please try again."'
-  );
-}
-
-function displayEndOfSearchResults() {
-  // loadMoreButton.classList.add('is-hidden');
-  Notiflix.Notify.warning(
-    "We're sorry, but you've reached the end of search results."
-  );
-}
-
 function renderPhoto(photos) {
-  photos.forEach(photo => {
-    const markup = createMarkup(photo);
-    galleryList.insertAdjacentHTML('beforeend', markup);
-  });
+  const markup = photos.map(photos => createMarkup(photos)).join('');
+
+  galleryList.insertAdjacentHTML('beforeend', markup);
 }
 
 function clearGallery() {
   galleryList.innerHTML = '';
 }
 
-function createMarkup(data) {
-  return `<div class="photo-card">
-      <a href="${data.largeImageURL}">
-        <img
-          src="${data.webformatURL}"
-          alt="${data.tags}"
-          loading="lazy"
-          width="350"
-        />
-      </a>
-      <div class="info">
-        <p class="info-item">
-          <b>Likes</b>
-          <span>${data.likes}</span>
-        </p>
-        <p class="info-item">
-          <b>Views</b>
-          <span>${data.views}</span>
-        </p>
-        <p class="info-item">
-          <b>Comments</b>
-          <span>${data.comments}</span>
-        </p>
-        <p class="info-item">
-          <b>Downloads</b>
-          <span>${data.downloads}</span>
-        </p>
-      </div>
-    </div>`;
-}
-
 function onScrollPage(e) {
   const { bottom } = document.documentElement.getBoundingClientRect();
   const clientHeight = document.documentElement.clientHeight;
 
-  if (bottom <= clientHeight + 150) {
+  if (bottom <= clientHeight + 400) {
     handleLoadMore();
     return;
   }
